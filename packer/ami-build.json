@@ -1,0 +1,55 @@
+{
+  "variables": {
+    "aws_access_key": "",
+    "aws_secret_key": "",
+    "ami_uniq_id": "",
+    "aws_region": "us-west-1"
+  },
+
+  "builders": [{
+    "type": "amazon-ebs",
+    "access_key": "{{user `aws_access_key`}}",
+    "secret_key": "{{user `aws_secret_key`}}",
+    "region": "{{user `aws_region`}}",
+    "source_ami_filter": {
+      "filters": {
+        "virtualization-type": "hvm",
+        "name": "amzn2-ami-hvm*",
+        "root-device-type": "ebs"
+      },
+      "owners": ["137112412989", "801119661308"],
+      "most_recent": true
+    },
+    "instance_type": "t2.micro",
+    "ssh_username": "ec2-user",
+    "ami_name": "web-server-{{user `ami_uniq_id`}}",
+    "ami_block_device_mappings": [{
+      "device_name": "/dev/xvda",
+      "volume_size": 8,
+      "volume_type": "gp2",
+      "delete_on_termination": true
+    }]
+  }],
+
+  "provisioners": [
+    {
+      "type":"shell",
+      "inline": [ "sleep 10", "mkdir /tmp/app" ]      
+    },
+    {
+      "type": "file",
+      "source": "app/",
+      "destination": "/tmp/app"
+    },
+    {
+      "type": "shell",
+      "execute_command": "echo '{{user `ssh_pass`}}' | {{ .Vars }} sudo -E -S sh '{{ .Path }}'",
+      "inline": [
+        "yum update -y",
+        "yum install httpd php -y",
+        "systemctl enable httpd && sudo systemctl start httpd",
+        "cp -r /tmp/app/* /var/www/html/"
+      ]
+    }
+  ]
+}
