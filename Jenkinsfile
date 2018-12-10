@@ -18,6 +18,7 @@ pipeline {
             accessKeyVariable: 'AWS_ACCESS_KEY',
             secretKeyVariable: 'AWS_SECRET_KEY'
         ]]) {
+                sh "env"
                 sh "packer validate packer/ami-build.json"
                 sh "cd terraform && terraform init"
             }
@@ -67,11 +68,8 @@ pipeline {
           sh """
             cd terraform
             terraform init
-            terraform plan -var 'ami_image_id=${AMI_IMAGE_ID}' -var 'aws_access_key=${AWS_ACCESS_KEY}' -var 'aws_secret_key=${AWS_SECRET_KEY}'
-            terraform apply -auto-approve \
-                              -var 'ami_image_id=${AMI_IMAGE_ID}' \
-                              -var 'aws_access_key=${AWS_ACCESS_KEY}' \
-                              -var 'aws_secret_key=${AWS_SECRET_KEY}'
+            terraform plan -var 'ami_image_id=${AMI_IMAGE_ID}'
+            terraform apply -auto-approve -var 'ami_image_id=${AMI_IMAGE_ID}'
           """
           }
         }
